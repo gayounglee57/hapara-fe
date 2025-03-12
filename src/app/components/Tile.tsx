@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { StudentDetailsResponse, Student } from "../types";
 import Drawer from "./Drawer";
 import { Offline } from "./Offline";
+import axios from "axios";
 
 export function Tile({ student }: { student: Student }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -11,15 +12,19 @@ export function Tile({ student }: { student: Student }) {
   const isOffline = student.status !== "online";
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${student.id}`)
-      .then((res) => res.json())
-      .then((data: StudentDetailsResponse) => {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/students/${student.id}`)
+      .then((response) => {
+        const data = response.data;
         if (data && Object.keys(data).length > 0) {
           setStudentDetail(data);
         }
         setLoading(false);
       })
-      .catch((err) => console.error("Error fetching students:", err));
+      .catch((error) => {
+        console.error("Error fetching student details:", error);
+        setLoading(false);
+      });
   }, [student.id]);
 
   if (loading) return <p>Loading...</p>;
@@ -41,7 +46,9 @@ export function Tile({ student }: { student: Student }) {
               <div>{student.name}</div>
               {studentDetail?.currentScreen ? (
                 <img src={studentDetail.currentScreen} alt="Current screen" />
-              ) : <img src="/hapara-logo.png" alt="Hapara logo" />}
+              ) : (
+                <img src="/hapara-logo.png" alt="Hapara logo" />
+              )}
             </div>
           </button>
           <Drawer
